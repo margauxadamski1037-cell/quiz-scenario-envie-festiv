@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Envies Festiv'</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@500;700;800;900&display=swap">
+<style>
+/* Layout: one centred game column; home = grid of 4 pole cards, quiz = one question card at a time, end = score + lexicon. Deliberately single dark "Halloween night" look. */
+:root{
+  color-scheme: dark;
+  --night:#17122a;
+  --panel:#241c40;
+  --panel-2:#2f2553;
+  --line:#3d3268;
+  --ink:#f5efff;
+  --muted:#b9add9;
+  --pumpkin:#ff8a2a;
+  --good:#5fd38a;
+  --bad:#ff6b7a;
+  --rayon:#ff8a2a;
+  --vitrine:#b78cff;
+  --com:#3fd0c9;
+  --vente:#ff7ab8;
+  --display:"Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --body:"Nunito", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--night)}
+body{background:var(--night);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;min-height:100%;
+  background-image:radial-gradient(circle at 85% -10%, rgba(255,138,42,.22), transparent 40%),radial-gradient(circle at 0% 100%, rgba(183,140,255,.16), transparent 45%);background-attachment:fixed}
+.wrap{max-width:820px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:.01em;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--pumpkin);outline-offset:3px}
+.hidden{display:none!important}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.logo{width:56px;height:56px;flex:none}
+.brand small{display:block;text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:800;color:var(--pumpkin)}
+.brand h1{font-size:clamp(28px,6vw,40px);line-height:1.05}
+
+/* home */
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin-bottom:22px}
+.intro p{margin:0 0 12px;color:var(--muted)}
+.intro p strong{color:var(--ink)}
+.ids{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.ids{grid-template-columns:1fr 1fr}}
+.field{display:grid;gap:4px;min-width:0}
+.field label{font-weight:800;font-size:14px}
+.field input{width:100%;min-width:0;background:var(--night);border:2px solid var(--line);border-radius:12px;padding:10px 12px;color:var(--ink);font:inherit;font-weight:700}
+.field input.miss{border-color:var(--bad)}
+.err{color:var(--bad);font-weight:800;margin:10px 0 0!important}
+.ans.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 22%,var(--panel-2))}
+.ans.sel .key{background:var(--c);color:var(--night)}
+.track span.done{background:color-mix(in srgb,var(--c) 55%,var(--panel-2))}
+.saved{display:inline-flex;align-items:center;gap:8px;font-weight:800;color:var(--muted);animation:pop .35s ease both}
+.send{background:var(--panel-2);border:2px dashed var(--c);border-radius:16px;padding:16px;text-align:left;margin:4px 0 18px}
+.send h3{font-size:21px;color:var(--c);margin-bottom:6px}
+.send p{margin:0 0 12px;color:var(--muted)}
+.send p strong{color:var(--ink)}
+.send .row{display:flex;gap:10px;flex-wrap:wrap}
+.status{margin-top:10px;font-weight:800;min-height:1.5em}
+.status.ok{color:var(--good)} .status.ko{color:var(--bad)}
+.poles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:560px){.poles{grid-template-columns:1fr}}
+.pole{position:relative;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:8px;transition:transform .15s ease,border-color .15s ease}
+.pole:hover{transform:translateY(-3px);border-color:var(--c)}
+.pole .tag{display:inline-flex;align-self:flex-start;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;color:var(--night);background:var(--c);padding:3px 10px;border-radius:999px}
+.pole h2{font-size:26px;color:var(--c)}
+.pole p{margin:0;color:var(--muted);font-size:15px}
+.pole .best{font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px}
+.pole .go{margin-top:4px;font-weight:900;color:var(--c)}
+.pole svg.deco{position:absolute;right:14px;top:14px;width:44px;height:44px;opacity:.9}
+
+/* quiz */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.back{background:none;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:800;color:var(--muted)}
+.back:hover{color:var(--ink);border-color:var(--muted)}
+.candy{font-weight:900;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-variant-numeric:tabular-nums}
+.track{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-bottom:18px}
+.track span{height:10px;border-radius:999px;background:var(--panel-2);transition:background .25s}
+.track span.now{background:var(--c)}
+.track span.ok{background:var(--good)}
+.track span.ko{background:var(--bad)}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:22px 20px 20px}
+.q-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.q-num{font-family:var(--display);font-size:18px;color:var(--c)}
+.q-type{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;background:var(--panel-2);color:var(--muted);padding:3px 10px;border-radius:999px}
+.q-text{font-size:clamp(19px,3.6vw,23px);font-weight:900;line-height:1.3;margin:0 0 18px;text-wrap:balance}
+.answers{display:grid;gap:10px}
+.answers.two{grid-template-columns:1fr 1fr}
+.ans{text-align:left;background:var(--panel-2);border:2px solid var(--line);border-radius:14px;padding:13px 15px;font-weight:700;display:flex;gap:12px;align-items:center;transition:border-color .12s,background .12s,transform .12s}
+.ans:hover:not(:disabled){border-color:var(--c);transform:translateX(3px)}
+.ans .key{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--night);font-weight:900;color:var(--c)}
+.answers.two .ans{justify-content:center;font-size:19px;font-weight:900;padding:18px}
+.ans:disabled{cursor:default}
+.ans.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--panel-2))}
+.ans.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,var(--panel-2));animation:shake .35s}
+.ans.dim{opacity:.5}
+.ans .ord{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--night);border:2px dashed var(--line);font-weight:900;color:var(--muted)}
+.ans.picked .ord{background:var(--c);border:2px solid var(--c);color:var(--night)}
+.order-tools{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{border:none;border-radius:14px;padding:12px 20px;font-weight:900;background:var(--c);color:var(--night)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.ghost{background:transparent;border:2px solid var(--line);color:var(--muted)}
+.feedback{margin-top:16px;border-radius:16px;padding:14px 16px;border:2px solid;display:grid;gap:6px}
+.feedback.ok{border-color:var(--good);background:color-mix(in srgb,var(--good) 10%,transparent)}
+.feedback.ko{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent)}
+.feedback b.verdict{font-family:var(--display);font-weight:400;font-size:21px}
+.feedback.ok b.verdict{color:var(--good)} .feedback.ko b.verdict{color:var(--bad)}
+.feedback .memo{color:var(--ink)}
+.feedback .memo em{font-style:normal;font-weight:900;color:var(--c)}
+.next-row{display:flex;justify-content:flex-end;margin-top:14px}
+.streak{font-size:14px;font-weight:900;color:var(--pumpkin)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+
+/* end */
+.end{text-align:center}
+.end .score{font-family:var(--display);font-size:clamp(64px,16vw,110px);line-height:1;color:var(--c);animation:pop .5s ease both;font-variant-numeric:tabular-nums}
+.end .score small{font-size:.4em;color:var(--muted)}
+.done-badge svg{width:84px;height:84px;animation:pop .5s ease both}
+.end .rank{font-family:var(--display);font-size:28px;margin:6px 0 4px}
+.end .who{color:var(--muted);font-weight:700;margin-bottom:18px}
+.pumpkins{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;margin:10px 0 18px}
+.pumpkins svg{width:30px;height:30px}
+.end-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:26px}
+.section-t{font-family:var(--display);font-size:22px;text-align:left;margin:20px 0 10px;color:var(--c)}
+.lex{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;text-align:left}
+@media (max-width:560px){.lex{grid-template-columns:1fr}}
+.lex div{background:var(--panel-2);border-radius:14px;padding:12px 14px}
+.lex dt{font-weight:900;color:var(--ink)}
+.lex dd{margin:2px 0 0;color:var(--muted);font-size:15px}
+.review{display:grid;gap:10px;text-align:left}
+.review .item{background:var(--panel-2);border-left:4px solid var(--bad);border-radius:12px;padding:12px 14px}
+.review .item b{display:block}
+.review .item span{color:var(--muted);font-size:15px}
+.perfect{color:var(--good);font-weight:800;text-align:left}
+footer{margin-top:30px;text-align:center;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M32 14c-3-6 1-10 5-10" stroke="#5fd38a" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <ellipse cx="22" cy="38" rx="14" ry="20" fill="#e2701c"/><ellipse cx="42" cy="38" rx="14" ry="20" fill="#e2701c"/>
+      <ellipse cx="32" cy="38" rx="14" ry="21" fill="#ff8a2a"/>
+      <path d="M20 32l6-6 5 6zM44 32l-6-6-5 6z" fill="#17122a"/>
+      <path d="M18 42c4 8 24 8 28 0l-5 3-4-3-5 4-5-4-4 3z" fill="#17122a"/>
+    </svg>
+    <div class="brand">
+      <small>Scénario Halloween · CAP EPC</small>
+      <h1>Quiz Envies Festiv'</h1>
+    </div>
+  </header>
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="intro">
+      <p>Madame Pano prépare Halloween au magasin d'Essey-lès-Nancy. <strong>Remplis ton identité, puis choisis ton pôle</strong> : 10 questions sur le vocabulaire et les notions du scénario. À la fin, tu télécharges ta copie et tu la déposes sur le bureau numérique.</p>
+      <div class="ids">
+        <div class="field"><label for="prenom">Prénom</label><input id="prenom" type="text" maxlength="30" autocomplete="off"></div>
+        <div class="field"><label for="nom">Nom</label><input id="nom" type="text" maxlength="30" autocomplete="off"></div>
+        <div class="field"><label for="classe">Classe</label><input id="classe" type="text" maxlength="20" placeholder="Ex. : 1CAP EPC" autocomplete="off"></div>
+        <div class="field"><label for="equipe">Équipe n°</label><input id="equipe" type="text" maxlength="5" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <p class="err hidden" id="idErr">Remplis au moins ton prénom, ton nom et ta classe pour commencer.</p>
+    </div>
+    <div class="poles" id="poles"></div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="bar">
+      <button class="back" id="quit">← Pôles</button>
+      <span class="candy" id="candy"></span>
+    </div>
+    <div class="track" id="track"></div>
+    <div class="card" id="card"></div>
+  </section>
+
+  <!-- END -->
+  <section id="end" class="hidden end"></section>
+
+  <footer>Envies Festiv' · Des fêtes pour toutes vos envies</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* ---------- Icônes ---------- */
+const ICON = {
+  candy:'<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M7 12l-4-4v8zM17 12l4-4v8z" fill="#b78cff"/><circle cx="12" cy="12" r="5.5" fill="#ff8a2a"/><path d="M9 9.5c2 1 4 4 6 5" stroke="#17122a" stroke-width="1.6" fill="none"/></svg>',
+  pumpkinOn:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7c-1-3 1-5 3-5" stroke="#5fd38a" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="11" cy="19" rx="7" ry="10" fill="#e2701c"/><ellipse cx="21" cy="19" rx="7" ry="10" fill="#e2701c"/><ellipse cx="16" cy="19" rx="7" ry="10.5" fill="#ff8a2a"/><path d="M10 16l3-3 2 3zM22 16l-3-3-2 3z" fill="#17122a"/><path d="M9 21c2 4 12 4 14 0l-3 1.5-2-1.5-2 2-2-2-2 1.5z" fill="#17122a"/></svg>',
+  pumpkinOff:'<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7c-1-3 1-5 3-5" stroke="#3d3268" stroke-width="2.4" fill="none" stroke-linecap="round"/><ellipse cx="16" cy="19" rx="12" ry="10.5" fill="#2f2553"/></svg>',
+  rayon:'<svg class="deco" viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="6" width="36" height="36" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M6 18h36M6 30h36" stroke="currentColor" stroke-width="3"/><rect x="10" y="10" width="6" height="6" fill="currentColor"/><rect x="19" y="10" width="6" height="6" fill="currentColor"/><rect x="10" y="22" width="6" height="6" fill="currentColor"/><rect x="28" y="34" width="10" height="6" fill="currentColor"/></svg>',
+  vitrine:'<svg class="deco" viewBox="0 0 48 48" aria-hidden="true"><path d="M4 14l4-8h32l4 8z" fill="currentColor"/><rect x="7" y="14" width="34" height="28" rx="2" fill="none" stroke="currentColor" stroke-width="3"/><path d="M14 36v-8h6v8M28 36l4-10 4 10" stroke="currentColor" stroke-width="3" fill="none"/></svg>',
+  com:'<svg class="deco" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 20v8h8l16 10V10L14 20z" fill="currentColor"/><path d="M36 16c3 3 3 13 0 16M40 12c5 5 5 19 0 24" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/></svg>',
+  vente:'<svg class="deco" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 8h28a4 4 0 014 4v14a4 4 0 01-4 4H20l-8 8v-8H8a4 4 0 01-4-4V12a4 4 0 014-4z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="15" cy="19" r="2.5" fill="currentColor"/><circle cx="23" cy="19" r="2.5" fill="currentColor"/><circle cx="31" cy="19" r="2.5" fill="currentColor"/></svg>'
+};
+
+/* ---------- Banque de questions ----------
+   type : qcm | vf | order | intrus
+   qcm/intrus : a = bonne réponse (index), choices = propositions
+   vf : a = true/false
+   order : choices dans le BON ordre (affichés mélangés)
+*/
+const POLES = [
+ {id:'rayon', name:'Pôle Rayon', color:'var(--rayon)', pitch:'Implantation, niveaux de présentation, planogramme et facing du rayon Halloween.',
+  questions:[
+   {t:'qcm', q:"L'implantation consiste à organiser les produits dans le rayon pour les rendre…",
+    choices:["Visibles, accessibles et attractifs","Rares, chers et protégés","Cachés jusqu'au passage en caisse","Rangés uniquement par ordre de prix"], a:0,
+    memo:"L'<em>implantation</em> rend les produits <em>visibles, accessibles et attractifs</em> pour faciliter l'achat et optimiser les ventes."},
+   {t:'qcm', q:"Une même famille de produits est présentée sur une même étagère. C'est l'implantation…",
+    choices:["Horizontale","Verticale","En vrac","En tête de gondole"], a:0,
+    memo:"<em>Implantation horizontale</em> : une famille par étagère. Lecture facile et rapide pour le client."},
+   {t:'vf', q:"L'implantation verticale présente une même famille de produits du haut vers le bas du rayon.", a:true,
+    memo:"<em>Implantation verticale</em> : la famille occupe toute la hauteur du rayon. Elle regroupe les produits d'une même marque ou gamme."},
+   {t:'qcm', q:"À quel niveau places-tu les produits à forte rotation et à forte valeur ajoutée ?",
+    choices:["Au niveau des yeux","Au niveau bas","Au niveau haut","Dans la réserve"], a:0,
+    memo:"Le <em>niveau des yeux</em> est le plus vendeur : on y met les produits qui se vendent vite et qui rapportent le plus."},
+   {t:'qcm', q:"Une grande citrouille gonflable, lourde et volumineuse, se place plutôt…",
+    choices:["Au niveau bas","Au niveau des yeux","Au niveau des mains","À côté des caisses"], a:0,
+    memo:"<em>Niveau bas</em> : produits lourds, volumineux ou moins achetés."},
+   {t:'order', q:"Remets les niveaux de présentation dans l'ordre, du HAUT vers le BAS du rayon.",
+    choices:["Niveau haut","Niveau des yeux","Niveau des mains","Niveau bas"],
+    memo:"Du haut vers le bas : <em>haut</em> (moins vendus, grande taille) → <em>yeux</em> (forte rotation) → <em>mains</em> (faciles à prendre) → <em>bas</em> (lourds, volumineux)."},
+   {t:'qcm', q:"Le planogramme, c'est…",
+    choices:["Un schéma qui montre l'emplacement de chaque produit dans le linéaire","Le plan de tout le magasin avec les caisses","La liste des prix affichée en rayon","Le planning des vendeurs"], a:0,
+    memo:"Le <em>planogramme</em> est le schéma du rayon : il indique où se place chaque produit sur le <em>linéaire</em>."},
+   {t:'qcm', q:"« Faire le facing », c'est…",
+    choices:["Ramener les produits en bord d'étagère, bien alignés, face au client","Retirer les produits abîmés du rayon","Changer les étiquettes de prix","Compter les produits en réserve"], a:0,
+    memo:"Le <em>facing</em> : produits alignés en façade, étiquette face au client. Le rayon paraît plein, ordonné et attractif."},
+   {t:'qcm', q:"Sur le plan d'Envies Festiv', où implantes-tu le rayon Halloween ?",
+    choices:["Dans la zone saisonnière / événementielle","À côté des caisses","Dans la réserve","Au rayon Mariage / Baptême"], a:0,
+    memo:"Halloween est un temps fort de l'année : il va dans la <em>zone saisonnière / événementielle</em>, comme Noël."},
+   {t:'qcm', q:"Quels produits complémentaires est-il logique de placer à proximité des déguisements Halloween ?",
+    choices:["Perruques et accessoires","Vaisselle de mariage","Cadres pour anniversaire de retraite","Faire-part de baptême"], a:0,
+    memo:"Les <em>produits complémentaires</em> (perruques, accessoires, maquillage) complètent le déguisement et donnent des idées d'achat au client."}
+  ],
+  lex:[["Implantation","Organisation des produits dans le rayon pour les rendre visibles, accessibles et attractifs."],["Linéaire","Longueur d'étagères où les produits sont exposés."],["Planogramme","Schéma qui indique l'emplacement de chaque produit dans le linéaire."],["Facing","Produits alignés en façade, face au client."],["Niveau des yeux","Niveau le plus vendeur : forte rotation, forte valeur ajoutée."],["Zone saisonnière","Espace du magasin réservé aux événements : Halloween, Noël…"]]
+ },
+ {id:'vitrine', name:'Pôle Vitrine', color:'var(--vitrine)', pitch:'Les 5 étapes pour préparer une vitrine, le thème, le message et la comparaison avec le concurrent.',
+  questions:[
+   {t:'qcm', q:"Quel est le rôle principal de la vitrine d'Envies Festiv' pour Halloween ?",
+    choices:["Attirer l'attention des passants et leur donner envie d'entrer","Stocker les produits en trop","Afficher les horaires du personnel","Cacher l'intérieur du magasin"], a:0,
+    memo:"La <em>vitrine</em> attire l'attention dès l'extérieur et donne envie d'entrer dans le magasin."},
+   {t:'order', q:"Remets dans l'ordre les étapes pour préparer une vitrine.",
+    choices:["Choisir un thème et un slogan","Choisir les produits à exposer","Choisir la décoration","Choisir un message principal","Organiser la vitrine"],
+    memo:"Les 5 étapes : <em>thème et slogan</em> → <em>produits</em> → <em>décoration</em> → <em>message principal</em> → <em>organisation</em>."},
+   {t:'qcm', q:"Combien de produits faut-il sélectionner, au maximum, pour une vitrine ?",
+    choices:["4 à 6 produits","1 seul produit","10 à 15 produits","Tous les produits du rayon"], a:0,
+    memo:"On choisit <em>4 à 6 produits maximum</em> : trop de produits rendent la vitrine illisible."},
+   {t:'qcm', q:"Le thème de la vitrine doit être en lien avec…",
+    choices:["L'événement, la saison ou l'opération commerciale","Les goûts personnels du vendeur","Les produits les moins chers uniquement","La couleur de la façade du voisin"], a:0,
+    memo:"Le <em>thème</em> suit l'événement (Halloween), la saison ou l'opération commerciale proposée."},
+   {t:'intrus', q:"Trouve l'intrus : lequel n'est PAS un élément de décoration de vitrine ?",
+    choices:["La caisse enregistreuse","Les affiches","Les guirlandes","Les supports de communication"], a:0,
+    memo:"<em>Décoration</em> : affiches, guirlandes, éléments décoratifs, accessoires, supports de communication, couleurs liées au thème."},
+   {t:'qcm', q:"Le message principal de la vitrine doit être…",
+    choices:["Court, clair, visible et adapté à la clientèle","Long et très détaillé","Écrit en petit pour rester discret","Le même toute l'année"], a:0,
+    memo:"Le <em>message principal</em> se lit en un coup d'œil : court, clair, visible, adapté à la clientèle. Ex. : « Découvrez notre sélection »."},
+   {t:'vf', q:"Une bonne vitrine est remplie au maximum, sans aucun espace vide.", a:false,
+    memo:"Faux : on organise les produits de façon <em>harmonieuse</em> et on <em>laisse de l'espace</em> pour la décoration."},
+   {t:'qcm', q:"Dans une vitrine, le « produit phare », c'est…",
+    choices:["Le produit vedette que l'on met en valeur","Le produit le moins cher","Un produit en rupture de stock","Une lampe de décoration"], a:0,
+    memo:"Le <em>produit phare</em> est le produit principal : on le met en valeur (au centre, éclairé, en hauteur)."},
+   {t:'qcm', q:"Dans le scénario, l'enseigne Falbalas est pour Envies Festiv'…",
+    choices:["Un concurrent","Un fournisseur","Un client fidèle","Une radio locale"], a:0,
+    memo:"Un <em>concurrent</em> vend des produits similaires. On compare sa vitrine pour trouver des <em>points d'amélioration</em>."},
+   {t:'qcm', q:"Avant de construire la vitrine sur le plateau commerce, tu réalises un croquis. C'est…",
+    choices:["Un dessin rapide qui montre l'organisation prévue de la vitrine","La facture des décorations","Une photo de la vitrine terminée","Le slogan écrit sur une affiche"], a:0,
+    memo:"Le <em>croquis</em> est un dessin de préparation : il permet de prévoir l'emplacement des produits, du décor et du message."}
+  ],
+  lex:[["Vitrine","Espace d'exposition visible de la rue, qui attire les clients."],["Thème","Idée directrice de la vitrine, liée à l'événement ou la saison."],["Slogan","Phrase courte et percutante qui accroche le passant."],["Produit phare","Produit vedette mis en valeur dans la vitrine."],["Croquis","Dessin rapide qui prépare l'organisation de la vitrine."],["Concurrent","Magasin qui vend des produits similaires (ex. : Falbalas)."]]
+ },
+ {id:'com', name:'Pôle Communication', color:'var(--com)', pitch:"Méthode AIDA, flyer, annonce radio, note de service et conditions de l'atelier maquillage.",
+  questions:[
+   {t:'qcm', q:"Que signifient les lettres de la méthode AIDA ?",
+    choices:["Attention, Intérêt, Désir, Action","Accueil, Information, Démonstration, Achat","Affiche, Image, Dessin, Annonce","Attirer, Informer, Discuter, Acheter"], a:0,
+    memo:"<em>AIDA</em> = Attention, Intérêt, Désir, Action. Un bon flyer attire, intéresse, donne envie et fait agir."},
+   {t:'order', q:"Remets les étapes de la méthode AIDA dans l'ordre.",
+    choices:["Attirer l'attention","Susciter l'intérêt","Créer le désir","Inciter à l'action"],
+    memo:"<em>Attention</em> (se faire remarquer) → <em>Intérêt</em> (donner envie d'en savoir plus) → <em>Désir</em> (faire naître l'envie) → <em>Action</em> (passer à l'action)."},
+   {t:'qcm', q:"Sur le flyer, la phrase « Venez nous rendre visite ! » correspond à quelle étape ?",
+    choices:["Action","Attention","Intérêt","Désir"], a:0,
+    memo:"C'est un <em>appel à l'action</em> : il dit clairement au lecteur ce qu'il doit faire."},
+   {t:'qcm', q:"Un visuel accrocheur, un titre court et percutant, des couleurs qui se repèrent : quelle étape ?",
+    choices:["Attention","Action","Désir","Intérêt"], a:0,
+    memo:"<em>Attention</em> : le flyer doit se faire remarquer au premier regard."},
+   {t:'qcm', q:"Quand a lieu l'atelier maquillage spécial Halloween ?",
+    choices:["Samedi 31 octobre, 10h-12h30 et 14h-18h","Dimanche 1er novembre, toute la journée","Vendredi 30 octobre, de 18h à 22h","Tous les samedis d'octobre"], a:0,
+    memo:"<em>Samedi 31 octobre</em>, de 10h à 12h30 et de 14h à 18h, <em>au rayon Halloween</em>."},
+   {t:'qcm', q:"À quelle condition un client peut-il profiter de l'atelier maquillage ?",
+    choices:["Il est gratuit pour tout achat d'un article Halloween","Il coûte 5 € par personne","Il faut avoir la carte de fidélité","Il est réservé aux salariés"], a:0,
+    memo:"La <em>condition</em> de l'animation : atelier <em>gratuit pour tout achat d'un article Halloween</em>. Environ 5 minutes par client."},
+   {t:'vf', q:"L'atelier maquillage est réservé aux enfants venus seuls.", a:false,
+    memo:"Faux : le <em>public visé</em> = enfants <em>accompagnés d'un adulte</em> et adultes volontaires."},
+   {t:'qcm', q:"Une note de service, c'est…",
+    choices:["Un document écrit interne qui transmet une information ou une consigne au personnel","Une publicité distribuée aux clients","Le ticket de caisse du client","Une annonce diffusée à la radio"], a:0,
+    memo:"La <em>note de service</em> est un écrit <em>interne</em> : elle informe les salariés et donne des consignes (ex. : venir déguisé le 31 octobre)."},
+   {t:'qcm', q:"Dans une note de service, l'« émetteur » est…",
+    choices:["La personne qui rédige la note (nom et fonction)","Les salariés qui la lisent","Le sujet de la note","Le lieu où elle est affichée"], a:0,
+    memo:"<em>Émetteur</em> = qui écrit (Madame Pano, responsable). <em>Destinataires</em> = personnes concernées. <em>Objet</em> = sujet de la note."},
+   {t:'qcm', q:"Pour être efficace, un message publicitaire radio doit être…",
+    choices:["Clair, dynamique et facile à retenir, avec les informations essentielles","Très long pour tout expliquer","Lu lentement sans intonation","Sans date ni lieu pour garder le mystère"], a:0,
+    memo:"À la radio, l'auditeur n'a pas d'image : le message doit être <em>clair, dynamique, facile à retenir</em> et donner <em>quoi, quand, où</em>."}
+  ],
+  lex:[["AIDA","Attention, Intérêt, Désir, Action : méthode pour construire un message qui convainc."],["Flyer","Petit prospectus publicitaire distribué aux clients."],["Appel à l'action","Phrase qui pousse à agir : « Rendez-vous en magasin ! »."],["Animation commerciale","Événement en magasin pour attirer et fidéliser (ex. : atelier maquillage)."],["Note de service","Écrit interne qui informe les salariés et donne des consignes."],["Émetteur / Destinataire","Celui qui écrit / ceux qui reçoivent la note."]]
+ },
+ {id:'vente', name:'Pôle Vente-Conseil', color:'var(--vente)', pitch:'SBAM, étapes de la vente, découverte du besoin, argumentaire, fiche produit et vente complémentaire.',
+  questions:[
+   {t:'qcm', q:"Que signifie la méthode SBAM ?",
+    choices:["Sourire, Bonjour, Au revoir, Merci","Saluer, Briefer, Argumenter, Montrer","Service, Budget, Achat, Magasin","Sourire, Besoin, Argument, Monnaie"], a:0,
+    memo:"<em>SBAM</em> = Sourire, Bonjour, Au revoir, Merci. On l'utilise à l'accueil et à la prise de congé."},
+   {t:'order', q:"Remets les étapes de la vente-conseil dans l'ordre.",
+    choices:["Accueillir le client","Découvrir le besoin","Conseiller et argumenter","Proposer un produit complémentaire","Conclure et prendre congé"],
+    memo:"<em>Accueil</em> → <em>découverte du besoin</em> → <em>argumentation</em> → <em>vente complémentaire</em> → <em>prise de congé</em>."},
+   {t:'qcm', q:"« Pour qui est le déguisement ? Quelle taille ? Quel budget ? » Ces questions servent à…",
+    choices:["Découvrir le besoin du client","Prendre congé du client","Encaisser le client","Ranger le rayon"], a:0,
+    memo:"La <em>découverte du besoin</em> : pour qui ? quel déguisement ? quelle taille ? quelles préférences ? quel budget ?"},
+   {t:'qcm', q:"Carte client 1 : un papa cherche un déguisement de vampire complet pour son fils de 8 ans. Budget max : 30 €. Que proposes-tu ?",
+    choices:["Un déguisement de vampire enfant 7-9 ans, cape et col inclus, à 24,99 €","Un déguisement de vampire adulte taille L à 29,99 €","Un déguisement de vampire enfant 8 ans à 44,99 €","Un déguisement de citrouille enfant 8 ans à 19,99 €"], a:0,
+    memo:"Le bon produit respecte <em>tout le besoin</em> : la personne (enfant 8 ans), le thème (vampire), la préférence (complet) et le <em>budget</em> (30 € max)."},
+   {t:'qcm', q:"Information : « Le déguisement est fourni avec des accessoires. » Quelle phrase est un vrai argument pour le client ?",
+    choices:["« Grâce aux accessoires, le déguisement est complet : vous économisez 5 €. »","« Il y a des accessoires dans le sachet. »","« C'est le déguisement que je préfère. »","« Il en reste beaucoup en stock. »"], a:0,
+    memo:"Un <em>argument</em> transforme une caractéristique en <em>avantage pour le client</em> : « Je vous conseille ce produit car… »."},
+   {t:'qcm', q:"Une cliente achète un déguisement de sorcière. Quel produit complémentaire lui proposer ?",
+    choices:["Un chapeau pointu et un balai","Une nappe de mariage","Un cadre photo de baptême","Une deuxième robe de sorcière identique"], a:0,
+    memo:"Un <em>produit complémentaire</em> complète le premier achat et le rend plus réussi : chapeau, balai, maquillage…"},
+   {t:'intrus', q:"Trouve l'intrus : quelle information ne figure PAS sur une fiche produit ?",
+    choices:["Le prénom du vendeur","Le prix de vente","Les avis clients","Les caractéristiques essentielles"], a:0,
+    memo:"Une <em>fiche produit</em> donne : famille/rayon, nom, avis, visuel, prix, offres, disponibilité, garanties, services, caractéristiques."},
+   {t:'vf', q:"Le vendeur doit présenter un produit avant de poser des questions au client.", a:false,
+    memo:"Faux : on <em>découvre d'abord le besoin</em>, puis on présente le produit adapté avec ses arguments."},
+   {t:'qcm', q:"Proposer un produit complémentaire permet surtout de…",
+    choices:["Mieux satisfaire le client et augmenter le panier moyen","Remplacer le produit choisi par un autre","Raccourcir la vente au maximum","Vider la réserve"], a:0,
+    memo:"La <em>vente complémentaire</em> rend le client plus satisfait et augmente le <em>panier moyen</em> (montant moyen dépensé par client)."},
+   {t:'qcm', q:"« Prendre congé » du client, c'est…",
+    choices:["Vérifier son choix, le remercier et lui dire au revoir","Partir en pause pendant la vente","Refuser de le servir","Lui demander de revenir plus tard"], a:0,
+    memo:"La <em>prise de congé</em> termine la vente avec le « A » et le « M » du SBAM : <em>Au revoir</em> et <em>Merci</em>."}
+  ],
+  lex:[["SBAM","Sourire, Bonjour, Au revoir, Merci."],["Découverte du besoin","Questions posées pour comprendre ce que veut le client."],["Argument","Caractéristique transformée en avantage pour le client."],["Fiche produit","Document qui rassemble toutes les informations sur un produit."],["Vente complémentaire","Proposer un produit qui complète le premier achat."],["Prise de congé","Fin de la vente : remercier et dire au revoir."]]
+ }
+];
+
+/* ---------- État ---------- */
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+let S = null;
+const shuffle = arr => { const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const LETTERS = ['A','B','C','D','E'];
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* Téléchargement : capacité "downloads" dans l'artefact, lien classique dans le fichier HTML */
+let DL = null;
+try { if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d=>{DL=d;}).catch(()=>{}); } catch(e){}
+
+/* Identité de l'élève */
+const ID_FIELDS = ['prenom','nom','classe','equipe'];
+const savedId = store.get('ef-id') || {};
+ID_FIELDS.forEach(f=>{
+  const el=$(f); el.value = savedId[f] || '';
+  el.addEventListener('input',()=>{
+    el.classList.remove('miss');
+    const v={}; ID_FIELDS.forEach(k=>v[k]=$(k).value.trim()); store.set('ef-id',v);
+  });
+});
+const ident = () => { const v={}; ID_FIELDS.forEach(k=>v[k]=$(k).value.trim()); return v; };
+
+function show(id){ ['home','quiz','end'].forEach(s=>$(s).classList.toggle('hidden',s!==id)); window.scrollTo({top:0}); }
+
+/* ---------- Accueil ---------- */
+function renderHome(){
+  $('poles').innerHTML = POLES.map(p=>{
+    const tries = store.get('ef-try-'+p.id) || 0;
+    return `<button class="pole" data-id="${p.id}" style="--c:${p.color}">
+      <span style="color:${p.color}">${ICON[p.id]}</span>
+      <span class="tag">10 questions</span>
+      <h2>${p.name}</h2>
+      <p>${p.pitch}</p>
+      <span class="best">${ICON.candy} ${tries ? 'Déjà joué '+tries+' fois' : 'Pas encore joué'}</span>
+      <span class="go">Jouer →</span>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('.pole').forEach(b=>b.onclick=()=>start(b.dataset.id));
+  show('home');
+}
+
+/* ---------- Quiz ---------- */
+function start(id){
+  const v = ident();
+  const missing = ['prenom','nom','classe'].filter(k=>!v[k]);
+  if(missing.length){
+    missing.forEach(k=>$(k).classList.add('miss'));
+    $('idErr').classList.remove('hidden');
+    $(missing[0]).focus();
+    return;
+  }
+  $('idErr').classList.add('hidden');
+  const pole = POLES.find(p=>p.id===id);
+  $('quiz').style.setProperty('--c', pole.color);
+  $('end').style.setProperty('--c', pole.color);
+  S = {pole, i:0, results:[], given:[], startedAt:new Date()};
+  show('quiz'); renderQ();
+}
+
+function renderTrack(){
+  $('track').innerHTML = S.pole.questions.map((_,k)=>
+    `<span class="${k<S.i?'done':k===S.i?'now':''}"></span>`).join('');
+  $('candy').innerHTML = `${ICON.candy} ${S.i} réponse${S.i>1?'s':''} enregistrée${S.i>1?'s':''}`;
+}
+
+const TYPE_LABEL = {qcm:'QCM', vf:'Vrai ou faux', order:'Remets dans l’ordre', intrus:'Trouve l’intrus'};
+
+function renderQ(){
+  renderTrack();
+  const q = S.pole.questions[S.i];
+  const last = S.i===S.pole.questions.length-1;
+  let body = '';
+  if(q.t==='vf'){
+    body = `<div class="answers two">
+      <button class="ans" data-v="true">Vrai</button>
+      <button class="ans" data-v="false">Faux</button></div>`;
+  } else if(q.t==='order'){
+    S.order = [];
+    const items = shuffle(q.choices.map((c,k)=>({c,k})));
+    body = `<div class="answers" id="ordList">${items.map(o=>`
+      <button class="ans" data-k="${o.k}"><span class="ord"></span><span>${esc(o.c)}</span></button>`).join('')}</div>`;
+  } else {
+    const mix = shuffle(q.choices.map((c,k)=>({c,k})));
+    body = `<div class="answers">${mix.map((o,n)=>`
+      <button class="ans" data-k="${o.k}"><span class="key">${LETTERS[n]}</span><span>${esc(o.c)}</span></button>`).join('')}</div>`;
+  }
+  $('card').innerHTML = `
+    <div class="q-head"><span class="q-num">Question ${S.i+1}/10</span><span class="q-type">${TYPE_LABEL[q.t]}</span></div>
+    <p class="q-text">${esc(q.q)}</p>
+    ${q.t==='order' ? '<p style="margin:-8px 0 14px;color:var(--muted);font-weight:700">Clique sur les étiquettes dans le bon ordre. Clique à nouveau pour annuler.</p>' : ''}
+    ${body}
+    <div class="order-tools" style="justify-content:flex-end">
+      ${q.t==='order' ? '<button class="btn ghost" id="reset">Effacer</button>' : ''}
+      <button class="btn" id="validate" disabled>${last ? 'Valider et terminer' : 'Valider →'}</button>
+    </div>`;
+
+  const btns = [...document.querySelectorAll('#card .ans')];
+  let pick = null; // pour qcm / vf / intrus
+
+  if(q.t==='order'){
+    const paint = ()=>{
+      btns.forEach(b=>{
+        const pos = S.order.indexOf(+b.dataset.k);
+        b.classList.toggle('picked',pos>-1);
+        b.querySelector('.ord').textContent = pos>-1 ? pos+1 : '';
+      });
+      $('validate').disabled = S.order.length!==q.choices.length;
+    };
+    btns.forEach(b=>b.onclick=()=>{
+      const k=+b.dataset.k, pos=S.order.indexOf(k);
+      if(pos>-1) S.order.splice(pos,1); else S.order.push(k);
+      paint();
+    });
+    $('reset').onclick=()=>{S.order=[];paint();};
+  } else {
+    btns.forEach(b=>b.onclick=()=>{
+      btns.forEach(x=>x.classList.toggle('sel',x===b));
+      pick = b;
+      $('validate').disabled = false;
+    });
+  }
+
+  $('validate').onclick=()=>{
+    let ok, txt;
+    if(q.t==='order'){
+      ok = S.order.every((k,n)=>k===n);
+      txt = S.order.map(k=>q.choices[k]).join(' > ');
+    } else if(q.t==='vf'){
+      const v = pick.dataset.v==='true';
+      ok = v===q.a; txt = v?'Vrai':'Faux';
+    } else {
+      const k = +pick.dataset.k;
+      ok = k===q.a; txt = q.choices[k];
+    }
+    S.results[S.i]=ok; S.given[S.i]=txt;
+    if(last) end(); else { S.i++; renderQ(); }
+  };
+}
+
+/* ---------- Fin ---------- */
+function rank(n){
+  if(n===10) return 'Maître d’Halloween';
+  if(n>=8) return 'Sorcier confirmé';
+  if(n>=6) return 'Vampire en progrès';
+  if(n>=4) return 'Fantôme apprenti';
+  return 'Petite citrouille';
+}
+const fmtDate = d => d.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+
+function end(){
+  const p=S.pole;
+  S.score = S.results.filter(Boolean).length;
+  S.endedAt = new Date();
+  S.attempt = (store.get('ef-try-'+p.id) || 0) + 1;
+  store.set('ef-try-'+p.id, S.attempt);
+  S.id = ident();
+  const who = `${S.id.prenom} ${S.id.nom.toUpperCase()} · ${S.id.classe}${S.id.equipe?' · Équipe '+S.id.equipe:''}`;
+  $('end').innerHTML = `
+    <div class="card">
+      <p style="margin:0 0 6px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;font-size:13px;color:var(--c)">${p.name} · terminé</p>
+      <div class="done-badge">${ICON.pumpkinOn}</div>
+      <div class="rank">Quiz terminé, bravo !</div>
+      <p style="margin:0 0 6px;color:var(--muted)">Tes 10 réponses sont enregistrées. Ton professeur te donnera ta note.</p>
+      <div class="who">${esc(who)}</div>
+      <div class="send">
+        <h3>Envoie ta copie à ton professeur</h3>
+        <p>1. Télécharge ta copie (PDF).<br>2. Dépose-la sur le bureau numérique : <strong>Espace Classes ⇒ Scénario Envies Festiv' ⇒ dossier de ton équipe</strong>.</p>
+        <div class="row">
+          <button class="btn" id="dl">Télécharger ma copie (PDF)</button>
+          <button class="btn ghost" id="cp">Copier mes résultats</button>
+        </div>
+        <div class="status" id="st" role="status"></div>
+        <textarea id="cpText" class="hidden" readonly style="width:100%;margin-top:10px;min-height:140px;background:var(--night);color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:10px;font:inherit;font-size:14px"></textarea>
+      </div>
+      <div class="end-actions">
+        <button class="btn ghost" id="again">Rejouer ce pôle</button>
+        <button class="btn ghost" id="home2">Choisir un autre pôle</button>
+      </div>
+    </div>`;
+  show('end');
+  $('dl').onclick=downloadCopy;
+  $('cp').onclick=copyText;
+  $('again').onclick=()=>start(p.id);
+  $('home2').onclick=renderHome;
+}
+
+/* ---------- Copie de l'élève ---------- */
+const clean = s => String(s)
+  .replace(/[‘’]/g,"'").replace(/[“”]/g,'"')
+  .replace(/→/g,'>').replace(/⇒/g,'>').replace(/…/g,'...').replace(/ /g,' ')
+  .replace(/[^\x20-\x7E -ÿŒœ€]/g,'');
+const fileBase = () => {
+  const a = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  return `Quiz-EnviesFestiv_${a(S.pole.name)}_${a(S.id.nom.toUpperCase())}_${a(S.id.prenom)}_essai${S.attempt}`;
+};
+
+function copyLines(){
+  const L = [];
+  L.push(`QUIZ ENVIES FESTIV' - ${S.pole.name.toUpperCase()}`);
+  L.push(`Élève : ${S.id.prenom} ${S.id.nom.toUpperCase()}`);
+  L.push(`Classe : ${S.id.classe}${S.id.equipe ? '   Équipe n° '+S.id.equipe : ''}`);
+  L.push(`Date : ${fmtDate(S.endedAt)}   Tentative n° ${S.attempt}`);
+  L.push('');
+  S.pole.questions.forEach((q,k)=>{
+    L.push(`${k+1}. ${q.q}`);
+    L.push(`   Réponse : ${S.given[k]}`);
+  });
+  return L;
+}
+
+async function save(filename, data){
+  const st=$('st');
+  if(DL){
+    try{ await DL.save({filename, data}); st.className='status ok'; st.textContent='Copie enregistrée. Dépose-la maintenant sur le bureau numérique.'; }
+    catch(e){
+      st.className='status ko';
+      st.textContent = e && e.code==='declined' ? 'Téléchargement annulé. Clique à nouveau pour enregistrer ta copie.' : 'Le téléchargement ne marche pas ici. Utilise « Copier mes résultats » et colle-les dans un document Word.';
+    }
+    return;
+  }
+  try{
+    const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data],{type:'text/plain;charset=utf-8'}));
+    const a = document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    st.className='status ok'; st.textContent='Copie téléchargée (regarde dans ton dossier Téléchargements). Dépose-la sur le bureau numérique.';
+  }catch(e){
+    st.className='status ko'; st.textContent='Le téléchargement ne marche pas ici. Utilise « Copier mes résultats » et colle-les dans un document Word.';
+  }
+}
+
+function downloadCopy(){
+  if(!(window.jspdf && window.jspdf.jsPDF)){ save(fileBase()+'.txt', copyLines().join('\r\n')); return; }
+  const doc = new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+  const W=210, M=16, maxW=W-2*M;
+  let y=0;
+  // bandeau
+  doc.setFillColor(36,28,64); doc.rect(0,0,W,30,'F');
+  doc.setTextColor(255,138,42); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+  doc.text(clean("SCÉNARIO ENVIES FESTIV' · HALLOWEEN"), M, 11);
+  doc.setTextColor(255,255,255); doc.setFontSize(19);
+  doc.text(clean(`Quiz - ${S.pole.name}`), M, 22);
+  // identité
+  y=40; doc.setTextColor(30,30,40); doc.setFontSize(11);
+  const row=(label,val,x)=>{ doc.setFont('helvetica','bold'); doc.text(clean(label),x,y); const w=doc.getTextWidth(clean(label)); doc.setFont('helvetica','normal'); doc.text(clean(val),x+w+2,y); };
+  row('Élève :', `${S.id.prenom} ${S.id.nom.toUpperCase()}`, M); row('Classe :', S.id.classe, 120); y+=7;
+  row('Équipe n° :', S.id.equipe||'-', M); row('Tentative n° :', String(S.attempt), 120); y+=7;
+  row('Date :', fmtDate(S.endedAt), M); y+=5;
+  doc.setDrawColor(200,190,225); doc.line(M,y,W-M,y); y+=8;
+  // questions
+  S.pole.questions.forEach((q,k)=>{
+    const qLines = doc.setFont('helvetica','bold').setFontSize(10.5).splitTextToSize(clean(`${k+1}. ${q.q}`), maxW);
+    const aLines = doc.setFont('helvetica','normal').setFontSize(10).splitTextToSize(clean(`Réponse : ${S.given[k]}`), maxW-4);
+    const h = qLines.length*5 + aLines.length*5 + 5;
+    if(y+h>285){ doc.addPage(); y=18; }
+    doc.setFont('helvetica','bold').setFontSize(10.5).setTextColor(30,30,40); doc.text(qLines, M, y);
+    y += qLines.length*5;
+    doc.setFont('helvetica','normal').setFontSize(10).setTextColor(85,80,110); doc.text(aLines, M+4, y);
+    y += aLines.length*5 + 5;
+  });
+  // pied
+  const n=doc.getNumberOfPages();
+  for(let i=1;i<=n;i++){ doc.setPage(i); doc.setFontSize(8).setTextColor(140,135,160).setFont('helvetica','normal');
+    doc.text(clean(`Envies Festiv' · ${S.id.prenom} ${S.id.nom.toUpperCase()} · page ${i}/${n}`), W/2, 292, {align:'center'}); }
+  save(fileBase()+'.pdf', doc.output('blob'));
+}
+
+function copyText(){
+  const txt = copyLines().join('\n');
+  const ta=$('cpText'), st=$('st');
+  const fallback=()=>{ ta.value=txt; ta.classList.remove('hidden'); ta.focus(); ta.select(); st.className='status ok'; st.textContent='Sélectionne le texte ci-dessous et copie-le (Ctrl+C).'; };
+  try{
+    navigator.clipboard.writeText(txt).then(()=>{ st.className='status ok'; st.textContent='Résultats copiés. Colle-les (Ctrl+V) dans ton document Word.'; }, fallback);
+  }catch(e){ fallback(); }
+}
+
+$('quit').onclick=renderHome;
+renderHome();
+</script>
+</body>
+</html>
